@@ -171,7 +171,7 @@ slowecho "please enter your new DB password once more:"
 
 read sqlrootpasswd 
 
-mysql -u root -p$sqlrootpasswd -e "CREATE DATABASE drupalone CHARACTER SET utf8 COLLATE utf8_general_ci"
+mysql -u root -p$sqlrootpasswd -e "CREATE DATABASE drupaldbone CHARACTER SET utf8 COLLATE utf8_general_ci"
 ### SpartanDrupalAdm#1!
 
 
@@ -179,11 +179,11 @@ read drupaldbadminpwd
 
 
 ##This doesnt work yet
-#mysql -u root -p$sqlrootpasswd -D drupalone -e "CREATE USER 'drupaldbadmin'@'localhost' IDENTIFIED BY $drupaldbadminpwd"
+#mysql -u root -p$sqlrootpasswd -D drupaldbone -e "CREATE USER 'drupaldbadmin'@'localhost' IDENTIFIED BY $drupaldbadminpwd"
 
 #CREATE USER 'drupaldbadmin'@'localhost' IDENTIFIED BY 'SpartanDrupaldbadmin#1!';
 
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON drupalone.* TO 'drupaldbadmin'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON drupaldbone.* TO 'drupaldbadmin'@'localhost';
 
 
 }
