@@ -7,6 +7,14 @@ installFilesTball=islandoraStackPackages.tar.gz
 
 yum -y install expect epel-release
 
+turn_off_selinux()
+{
+sed -i -e's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
+setenforce 0
+slowecho "selinux set to permissive"
+getenforce
+}
+
 apt_get_install_apps()
 {
 	app_packages=( \
@@ -112,9 +120,107 @@ slowecho "installing php files"
 
 }
 
-yum -y install drush
 
 
+installing_apache()
+{
+
+yum -y groupinstall web-server
+systemctl start httpd
+systemctl enable httpd
+firewall-cmd --permanent --add-service=http
+firewall-cmd --reload
+
+slowecho "apache web server installed, enabled, and activated. Port 80 opened."
+
+}
+
+
+
+installing_mysql()
+{
+
+yum -y localinstall /opt/tempFilesDir/mysql80-community-release-el7-1.noarch.rpm
+
+cp /etc/yum.repos.d/mysql-community.repo /etc/yum.repos.d/mysql-community.repo.original
+
+awk -vRS='\n\n' -vORS='\n\n' '/\[mysql80-community/{sub(/enabled=1/,"enabled=0")}1;' /etc/yum.repos.d/mysql-community.repo
+
+awk -vRS='\n\n' -vORS='\n\n' '/\[mysql57-community/{sub(/enabled=0/,"enabled=1")}1;' /etc/yum.repos.d/mysql-community.repo
+
+yum -y install mysql mysql-community-server
+
+systemctl start mysqld
+systemctl enable mysqld
+
+grep 'temporary password' /var/log/mysqld.log
+
+slowecho "please enter the default password for mysql root user. You'll see it above."
+
+mysqladmin -u root -p password
+
+mysql_secure_installation <<EOF
+n
+y
+y
+y
+y
+EOF
+
+slowecho "please enter your new DB password once more:"
+
+read sqlrootpasswd 
+
+mysql -u root -p$sqlrootpasswd -e "CREATE DATABASE drupalone CHARACTER SET utf8 COLLATE utf8_general_ci"
+### SpartanDrupalAdm#1!
+
+
+read drupaldbadminpwd
+
+
+##This doesnt work yet
+#mysql -u root -p$sqlrootpasswd -D drupalone -e "CREATE USER 'drupaldbadmin'@'localhost' IDENTIFIED BY $drupaldbadminpwd"
+
+#CREATE USER 'drupaldbadmin'@'localhost' IDENTIFIED BY 'SpartanDrupaldbadmin#1!';
+
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON drupalone.* TO 'drupaldbadmin'@'localhost';
+
+
+}
+
+
+install_drupal()
+{
+unzip /opt/tempFilesDir/drupal-7.59.zip -d /var/www/html/
+mv /var/www/html/drupal-7.59/ drupal/
+chown -R apache:apache /var/www/html/drupal/
+semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/drupal(/.*)?"
+restorecon -RFv /var/www/html/drupal/
+cp -p /var/www/html/drupal/sites/default/default.settings.php /var/www/html/drupal/sites/default/settings.php
+chmod a+w /var/www/html/drupal/sites/default/settings.php 
+chmod a+w /var/www/html/drupal/sites/default/
+}
+
+
+
+
+#lcr()
+#{
+#last=$(echo `history |tail -n2 |head -n1` | sed 's/[0-9]* //')
+#slowecho "COMMAND: [$last] "
+#}
+
+#lcsf()
+#{
+#if [ $? -eq 0 ]
+#then
+#  lcr 
+#  slowecho "SUCCESS::"
+#else
+#  lcr
+#  slowecho "FAILURE::" >&2
+#fi
+#}
 
 
 slowecho ()
