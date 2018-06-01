@@ -201,7 +201,54 @@ chmod a+w /var/www/html/drupal/sites/default/settings.php
 chmod a+w /var/www/html/drupal/sites/default/
 }
 
+clean_urls()
+{
 
+}
+
+
+increase_max_upload()
+
+{
+
+cp /etc/php.ini /etc/php.ini.original
+sed -i -e's/upload_max_filesize = 2M/upload_max_filesize = 2048M/' /etc/php.ini
+sed -i -e's/post_max_filesize = 8M/post_max_filesize = 2048M/' /etc/php.ini
+sed -i -e's/memory_limit = 128M/memory_limit = 256M/' /etc/php.ini
+
+}
+
+
+java_install()
+
+{
+
+yum -y localinstall jdk-8u162-linux-x64.rpm
+alternatives --install /usr/bin/java java /usr/java/jdk1.8.0_162/bin/java 200000
+alternatives --install /usr/bin/javaws javaws /usr/java/jdk1.8.0_162/bin/javaws 200000
+
+#now use alternatives --config java
+
+cat << EOF >> /etc/profile.d/fedora-profile.sh
+
+JAVA_HOME=/usr/java/jdk1.8.0_162
+FEDORA_HOME=/usr/local/fedora
+CLASSPATH=$JAVA_HOME/jre/lib
+CATALINA_HOME=$FEDORA_HOME/tomcat
+JAVA_OPTS="$JAVA_OPTS -Djavax.net.ssl.trustStore=$FEDORA_HOME/server/truststore"
+JAVA_OPTS="$JAVA_OPTS -Djavax.net.ssl.trustStorePassword=tomcat"
+JAVA_OPTS="$JAVA_OPTS -Xmx512m"
+PATH="$PATH:$FEDORA_HOME/server/bin:$FEDORA_HOME/client/bin:/opt/apache-maven-3.5.3/bin"
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CATALINA_HOME/lib
+JRE_HOME=/usr/java/jdk1.8.0_162/jre
+J2SDKDIR=/usr/java/jdk1.8.0_162
+J2REDIR=/usr/java/jdk1.8.0_162/jre
+KAKADU_LIBRARY_PATH=/usr/local/djatoka/lib/Linux-x86-64
+export JAVA_HOME CLASSPATH CATALINA_HOME JAVA_OPTS FEDORA_HOME LD_LIBRARY_PATH JRE_HOME J2SDKDIR J2REDIR KAKADU_LIBRARY_PATH PATH
+
+EOF
+
+}
 
 
 #lcr()
